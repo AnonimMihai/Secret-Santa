@@ -114,7 +114,10 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         origin = self.headers.get('Origin')
-        if origin and origin != 'http://' + self.headers.get('Host', ''):
+        host = self.headers.get('Host', '')
+        # Browsers determine same-origin before the tunnel rewrites the host or scheme.
+        same_origin = self.headers.get('Sec-Fetch-Site') == 'same-origin'
+        if origin and not same_origin and origin not in (f'http://{host}', f'https://{host}'):
             return self.reply('Invalid origin', 403)
         try:
             size = int(self.headers.get('Content-Length', '0'))
